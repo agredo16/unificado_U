@@ -92,7 +92,7 @@ class UsuarioController {
     }
   }
 
-  async obtenerPorId() {
+  async obtenerPorId(req, res) {
     try {
       const usuario = await this.usuarioModel.obtenerPorId(req.params.id);
       if (!usuario) {
