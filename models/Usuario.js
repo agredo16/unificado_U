@@ -1,3 +1,5 @@
+const { ObjectId } = require("mongodb");
+
 class Usuario{
     constructor(db){
         this.collection = db.collection('usuarios');
@@ -16,7 +18,7 @@ class Usuario{
                     permisos : ['perfil_propio', 'gestionar_pruebas','ver_resultados']
                 },
                 {nombre: 'administrador',
-                    permisos: ['perfil_propio','ver_usuarios','editar_usuarios','gestionar_laboratostas']
+                    permisos: ['perfil_propio','ver_usuarios','editar_usuarios','gestionar_laboratoristas']
                 },
                 {nombre: 'super_admin',
                     permisos: ['perfil_propio','ver_usuarios','editar_usuarios','crear_admin','eliminar_admi','configuracion_sistema']
@@ -87,9 +89,15 @@ class Usuario{
                         return await this.collection.insertOne(nuevoUsuario);
 
         }
+        async obtenerTodos() {
+          return await this.collection.find({}, { projection: { password: 0 } }).toArray();
+        }
 
-    async obtenetPorId(id){
-        return await this.collection.findOne({ _id: id});
+    async obtenerPorId(id){
+      if(!ObjectId.isValid(id)){
+        throw new Error('ID no válido');
+      }
+        return await this.collection.findOne({ _id: new ObjectId(id)});
     }
 
     async obtenerPorEmail(email){

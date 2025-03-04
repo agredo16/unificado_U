@@ -2,6 +2,7 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
+
 class UsuarioController {
   constructor(usuarioModel) {
     this.usuarioModel = usuarioModel;
@@ -84,12 +85,9 @@ class UsuarioController {
 
   async obtenerTodos(req, res) {
     try {
-      const usuarios = await this.usuarioModel.obtenerTodos.find({}, {
-        projection: { password: 0 } // Excluimos la contraseña
-      }).toArray();
-      
-      res.status(200).json(usuarios);
-    } catch (error) {
+      const usuarios = await this.usuarioModel.obtenerTodos();
+      re.status(200).json(usuarios);
+    }catch (error) {
       res.status(500).json({ error: error.message });
     }
   }

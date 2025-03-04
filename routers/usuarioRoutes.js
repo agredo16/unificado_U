@@ -7,7 +7,7 @@ module.exports = (controller) => {
   // Rutas de usuarios
   router.post('/registro', validarRegistro, controller.registrar.bind(controller));
   router.post('/login', controller.login.bind(controller));
-  router.get('/', autenticar, verificarPermisos(['ver_usuarios']), controller.obtenerTodos.bind(controller)); // Corregido: verificarPermisos
+  router.get('/', autenticar, verificarPermisos(['ver_usuarios']), controller.obtenerTodos.bind(controller)); 
   router.get('/:id', autenticar, controller.obtenerPorId.bind(controller));
   router.put('/:id', autenticar, controller.actualizar.bind(controller));
   router.delete('/:id', autenticar, verificarPermisos(['eliminar_admin']), controller.eliminar.bind(controller));
