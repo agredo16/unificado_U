@@ -20,7 +20,7 @@ class UsuarioController {
 
       const usuarioResult = await this.usuarioModel.crear({
         email,
-        password,
+        password: hashedPassword,
         nombre,
         tipo,
         documento,
@@ -60,8 +60,8 @@ class UsuarioController {
       const token = jwt.sign(
         { 
           userId: usuario._id,
-          rol: usuario.rol.nombre,
-          permisos: usuario.rol.permisos 
+          rol: usuario.rol.nombre || 'sin_rol',
+          permisos: usuario.rol?.permisos  || []
         }, 
         process.env.JWT_SECRET || 'secreto', 
         { expiresIn: '1h' }
@@ -84,7 +84,7 @@ class UsuarioController {
 
   async obtenerTodos(req, res) {
     try {
-      const usuarios = await this.usuarioModel.collection.find({}, {
+      const usuarios = await this.usuarioModel.obtenerTodos.find({}, {
         projection: { password: 0 } // Excluimos la contraseña
       }).toArray();
       
@@ -94,7 +94,7 @@ class UsuarioController {
     }
   }
 
-  async obtenerPorId(req, res) {
+  async obtenerPorId() {
     try {
       const usuario = await this.usuarioModel.obtenerPorId(req.params.id);
       if (!usuario) {

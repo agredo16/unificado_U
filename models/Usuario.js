@@ -41,7 +41,7 @@ class Usuario{
         }
 
         const nuevoUsuario ={
-            email: userData,
+            email: userData.email,
             password: userData.password,
             nombre: userData.nombre,
             documento: userData.documento,
