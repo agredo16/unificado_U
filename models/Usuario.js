@@ -105,58 +105,63 @@ class Usuario{
     }
 
     async actualizarUsuario(id, datosActualizados) {
-      if (!ObjectId.isValid(id)){
+      if (!ObjectId.isValid(id)) {
         throw new Error('ID no válido');
       }
-
+    
       const objectId = new ObjectId(id);
-      
-        if (datosActualizados.tipo) {
-          const rol = await this.rolesCollection.findOne({ nombre: datosActualizados.tipo });
-          if (!rol) {
-            throw new Error('Tipo de usuario no válido');
-          }
-          
-          if (datosActualizados.tipo === 'super_admin') {
-            const superAdminExistente = await this.collection.findOne({ 
-              'rol.nombre': 'super_admin',
-              _id: { $ne: objectId }
-            });
-            if (superAdminExistente) {
-              throw new Error('Ya existe un Super Administrador');
-            }
-          }
-          
-          datosActualizados.rol = {
-            nombre: datosActualizados.tipo,
-            permisos: rol.permisos
-          };
-          
-          delete datosActualizados.tipo;
-        }
     
-        if (datosActualizados.datosEspecificos) {
-          const usuario = await this.obtenerPorId(id);
-          datosActualizados.detalles = {
-            ...usuario.detalles,
-            ...datosActualizados.datosEspecificos
-          };
-          
-          delete datosActualizados.datosEspecificos;
-        }
-
-        // Actualizamos el usuario en la base de datos
-  const resultado = await this.collection.updateOne(
-    { _id: objectId }, 
-    { $set: datosActualizados }
-  );
-    
-        return await this.collection.updateOne(
-          { _id: id },
-          { $set: datosActualizados }
-        );
+      // Verifica si el usuario existe antes de intentar actualizarlo
+      const usuarioExistente = await this.obtenerPorId(id);
+      if (!usuarioExistente) {
+        throw new Error('Usuario no encontrado');
       }
     
+      if (datosActualizados.tipo) {
+        const rol = await this.rolesCollection.findOne({ nombre: datosActualizados.tipo });
+        if (!rol) {
+          throw new Error('Tipo de usuario no válido');
+        }
+    
+        if (datosActualizados.tipo === 'super_admin') {
+          const superAdminExistente = await this.collection.findOne({ 
+            'rol.nombre': 'super_admin',
+            _id: { $ne: objectId }
+          });
+          if (superAdminExistente) {
+            throw new Error('Ya existe un Super Administrador');
+          }
+        }
+    
+        datosActualizados.rol = {
+          nombre: datosActualizados.tipo,
+          permisos: rol.permisos
+        };
+    
+        delete datosActualizados.tipo;
+      }
+    
+      if (datosActualizados.datosEspecificos) {
+        datosActualizados.detalles = {
+          ...usuarioExistente.detalles,
+          ...datosActualizados.datosEspecificos
+        };
+    
+        delete datosActualizados.datosEspecificos;
+      }
+    
+      // Actualizamos el usuario en la base de datos
+      const resultado = await this.collection.updateOne(
+        { _id: objectId }, 
+        { $set: datosActualizados }
+      );
+    
+      if (resultado.matchedCount === 0) {
+        throw new Error('Usuario no encontrado');
+      }
+    
+      return resultado;
+    }
       async eliminar(id) {
         return await this.collection.deleteOne({ _id: id });
       }
