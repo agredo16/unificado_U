@@ -118,7 +118,7 @@ class Usuario{
           if (datosActualizados.tipo === 'super_admin') {
             const superAdminExistente = await this.collection.findOne({ 
               'rol.nombre': 'super_admin',
-              _id: { $ne: objectId }
+              _id: { $ne: ObjectIdbjectId }
             });
             if (superAdminExistente) {
               throw new Error('Ya existe un Super Administrador');
