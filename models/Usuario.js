@@ -109,6 +109,8 @@ class Usuario{
         throw new Error('ID no válido');
       }
 
+      const objectId = new ObjectId(id);
+      
         if (datosActualizados.tipo) {
           const rol = await this.rolesCollection.findOne({ nombre: datosActualizados.tipo });
           if (!rol) {
@@ -118,7 +120,7 @@ class Usuario{
           if (datosActualizados.tipo === 'super_admin') {
             const superAdminExistente = await this.collection.findOne({ 
               'rol.nombre': 'super_admin',
-              _id: { $ne: ObjectIdbjectId }
+              _id: { $ne: objectId }
             });
             if (superAdminExistente) {
               throw new Error('Ya existe un Super Administrador');
