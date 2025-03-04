@@ -105,46 +105,49 @@ class Usuario{
     }
 
     async actualizarUsuario(id, datosActualizados) {
-        // Si se está actualizando el rol, verificamos que sea válido
+      if (!ObjectId.isValid(id)){
+        throw new Error('ID no válido');
+      }
+
         if (datosActualizados.tipo) {
           const rol = await this.rolesCollection.findOne({ nombre: datosActualizados.tipo });
           if (!rol) {
             throw new Error('Tipo de usuario no válido');
           }
           
-          // Si es super_admin, verificamos que no exista otro
           if (datosActualizados.tipo === 'super_admin') {
             const superAdminExistente = await this.collection.findOne({ 
               'rol.nombre': 'super_admin',
-              _id: { $ne: id }
+              _id: { $ne: objectId }
             });
             if (superAdminExistente) {
               throw new Error('Ya existe un Super Administrador');
             }
           }
           
-          // Actualizamos rol y permisos
           datosActualizados.rol = {
             nombre: datosActualizados.tipo,
             permisos: rol.permisos
           };
           
-          // Eliminamos el campo tipo que ya no se necesita
           delete datosActualizados.tipo;
         }
     
-        // Si hay datos específicos según el rol, los actualizamos
         if (datosActualizados.datosEspecificos) {
-          // Mezclamos con los detalles existentes
           const usuario = await this.obtenerPorId(id);
           datosActualizados.detalles = {
             ...usuario.detalles,
             ...datosActualizados.datosEspecificos
           };
           
-          // Eliminamos el campo datosEspecificos que ya no se necesita
           delete datosActualizados.datosEspecificos;
         }
+
+        // Actualizamos el usuario en la base de datos
+  const resultado = await this.collection.updateOne(
+    { _id: objectId }, 
+    { $set: datosActualizados }
+  );
     
         return await this.collection.updateOne(
           { _id: id },
