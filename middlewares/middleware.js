@@ -1,17 +1,20 @@
-// middlewares/index.js
 const jwt = require('jsonwebtoken');
 
 // Middleware para autenticación
 const autenticar = (req, res, next) => {
   try {
-    const token = req.headers.authorization?.split(' ')[1];
+    const token = req.headers.authorization?.split(' ')[1]; // Extrae el token del encabezado "Authorization"
     
     if (!token) {
       return res.status(401).json({ error: 'Token no proporcionado' });
     }
     
+    // Decodifica el token JWT
     const decodificado = jwt.verify(token, process.env.JWT_SECRET || 'secreto');
+    
+    // Agrega la información del usuario al objeto `req`
     req.usuario = decodificado;
+    
     next();
   } catch (error) {
     return res.status(401).json({ error: 'Token inválido' });
@@ -22,9 +25,15 @@ const autenticar = (req, res, next) => {
 const verificarPermisos = (permisosRequeridos) => {
   return (req, res, next) => {
     try {
-      const { permisos } = req.usuario;
+      const { permisos } = req.usuario; 
       
-      // Verificar si el usuario tiene al menos uno de los permisos requeridos
+      if (!permisos || !Array.isArray(permisos)) {
+        return res.status(403).json({ 
+          error: 'No tiene los permisos necesarios para esta acción' 
+        });
+      }
+      
+   
       const tienePermiso = permisosRequeridos.some(permiso => 
         permisos.includes(permiso)
       );
