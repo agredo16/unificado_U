@@ -26,6 +26,11 @@ const verificarPermisos = (permisosRequeridos) => {
   return (req, res, next) => {
     try {
       const { permisos } = req.usuario; 
+
+      console.log('Permisos del usuario :', permisos);
+      console.log('Permisos requeriods :', permisosRequeridos);
+      
+      
       
       if (!permisos || !Array.isArray(permisos)) {
         return res.status(403).json({ 

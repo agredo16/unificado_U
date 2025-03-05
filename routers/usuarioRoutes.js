@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const { autenticar, verificarPermisos, validarRegistro } = require('../middlewares/middleware');
+const { autenticar, verificarPermisos } = require('../middlewares/middleware');
 
 module.exports = (controller) => {
     // Rutas de usuarios
-    router.post('/registro', autenticar, verificarPermisos(['crear_usuarios']), validarRegistro, controller.registrar.bind(controller));
+    router.post('/registro', autenticar, verificarPermisos(['crear_usuarios']), controller.registrar.bind(controller));
     router.post('/login', controller.login.bind(controller));
     router.get('/', autenticar, verificarPermisos(['ver_usuarios']), controller.obtenerTodos.bind(controller));
     router.get('/:id', autenticar, verificarPermisos(['ver_usuarios']), controller.obtenerPorId.bind(controller));
