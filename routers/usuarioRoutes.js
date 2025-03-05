@@ -4,9 +4,8 @@ const { autenticar, verificarPermisos } = require('../middlewares/middleware');
 const Usuario = require('../models/Usuario'); 
 
 module.exports = (controller) => {
-    // Ruta de registro con validación de usuarios existentes
-    router.post('/registro', controller.registrar.bind(controller));
     // Rutas de autenticación y usuarios
+    router.get('/registro', autenticar, verificarPermisos(['crear_usuarios']), controller.obtenerTodos.bind(controller));
     router.post('/login', controller.login.bind(controller));
     router.get('/', autenticar, verificarPermisos(['ver_usuarios']), controller.obtenerTodos.bind(controller));
     router.get('/:id', autenticar, verificarPermisos(['ver_usuarios']), controller.obtenerPorId.bind(controller));
