@@ -5,7 +5,7 @@ const Usuario = require('../models/Usuario');
 
 module.exports = (controller) => {
     // Rutas de autenticación y usuarios
-    router.get('/registro', autenticar, verificarPermisos(['crear_usuarios']), controller.obtenerTodos.bind(controller));
+    router.post('/registro', autenticar, verificarPermisos(['crear_usuarios']), controller.obtenerTodos.bind(controller));
     router.post('/login', controller.login.bind(controller));
     router.get('/', autenticar, verificarPermisos(['ver_usuarios']), controller.obtenerTodos.bind(controller));
     router.get('/:id', autenticar, verificarPermisos(['ver_usuarios']), controller.obtenerPorId.bind(controller));
