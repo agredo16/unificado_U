@@ -7,23 +7,26 @@ module.exports = (controller) => {
     // Ruta de registro con validación de usuarios existentes
     router.post('/registro', async (req, res, next) => {
         try {
-            const usuarios = await Usuario.countDocuments(); // Verifica cuántos usuarios hay en la BD
+            const usuarios = await Usuario.countDocuments();
             if (usuarios === 0) {
-                // Si no hay usuarios, permite el registro sin autenticación
                 return controller.registrar(req, res, next);
             }
         } catch (error) {
             return res.status(500).json({ error: 'Error al verificar usuarios' });
         }
-
-        // Si ya hay usuarios, requiere autenticación y permisos
-        autenticar(req, res, async () => {
-            verificarPermisos(['crear_usuarios'])(req, res, () => {
-                controller.registrar.bind(controller)(req, res, next);
+    
+        // Si ya hay usuarios, se requiere autenticación y permisos
+        autenticar(req, res, (err) => {
+            if (err) return next(err);
+    
+            verificarPermisos(['crear_usuarios'])(req, res, (err) => {
+                if (err) return next(err);
+    
+                controller.registrar(req, res, next);
             });
         });
     });
-
+    
     // Rutas de autenticación y usuarios
     router.post('/login', controller.login.bind(controller));
     router.get('/', autenticar, verificarPermisos(['ver_usuarios']), controller.obtenerTodos.bind(controller));
