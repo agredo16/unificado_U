@@ -10,8 +10,11 @@ class UsuarioController {
         try {
             const usuarioActual = req.usuario; // Suponiendo que el usuario actual está en el request
 
+            // Obtener permisos de manera flexible
+            const permisos = usuarioActual.permisos || (usuarioActual.rol && usuarioActual.rol.permisos) || [];
+
             // Verifica si el usuario que realiza la acción tiene el permiso 'crear_usuarios'
-            if (!usuarioActual.rol.permisos.includes('crear_usuarios')) {
+            if (!permisos.includes('crear_usuarios')) {
                 return res.status(403).json({ error: 'No tiene permisos para crear usuarios' });
             }
 
@@ -63,6 +66,7 @@ class UsuarioController {
                 return res.status(400).json({ error: 'Credenciales inválidas' });
             }
 
+            // CORREGIDO: Estructura del token unificada
             const token = jwt.sign(
                 {
                     userId: usuario._id,
@@ -72,6 +76,8 @@ class UsuarioController {
                 process.env.JWT_SECRET || 'secreto',
                 { expiresIn: '1h' }
             );
+
+            console.log('Token generado:', jwt.decode(token));
 
             res.status(200).json({
                 mensaje: 'Login exitoso',
@@ -212,7 +218,11 @@ class UsuarioController {
             const { accion } = req.body;
             const userId = req.usuario.userId;
 
-            if (req.usuario.rol !== 'super_admin') {
+            // Verificar el rol usando la estructura correcta
+            const esAdmin = req.usuario.rol === 'super_admin' || 
+                          (req.usuario.rol && req.usuario.rol.nombre === 'super_admin');
+                          
+            if (!esAdmin) {
                 return res.status(403).json({ error: 'Acción no permitida' });
             }
 

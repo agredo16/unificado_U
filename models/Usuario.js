@@ -136,8 +136,11 @@ class Usuario {
 
         const objectId = new ObjectId(id);
 
+        // CORREGIDO: Obtener permisos de manera flexible
+        const permisos = usuarioActual.permisos || (usuarioActual.rol && usuarioActual.rol.permisos) || [];
+
         // Verifica si el usuario que realiza la acción tiene el permiso 'editar_usuarios'
-        if (!usuarioActual.rol.permisos.includes('editar_usuarios')) {
+        if (!permisos.includes('editar_usuarios')) {
             throw new Error('No tiene permisos para editar usuarios');
         }
 
@@ -206,12 +209,15 @@ class Usuario {
         }
 
         const rolUsuarioAEliminar = usuarioExistente.rol.nombre;
+        
+        // CORREGIDO: Obtener permisos de manera flexible
+        const permisos = usuarioActual.permisos || (usuarioActual.rol && usuarioActual.rol.permisos) || [];
 
-        if (usuarioActual.rol.permisos.includes('eliminar_usuarios')) {
+        if (permisos.includes('eliminar_usuarios')) {
             // El usuario tiene permiso para eliminar cualquier usuario
-        } else if (rolUsuarioAEliminar === 'laboratorista' && usuarioActual.rol.permisos.includes('eliminar_laboratoristas')) {
+        } else if (rolUsuarioAEliminar === 'laboratorista' && permisos.includes('eliminar_laboratoristas')) {
             // El usuario tiene permiso para eliminar laboratoristas
-        } else if (rolUsuarioAEliminar === 'cliente' && usuarioActual.rol.permisos.includes('eliminar_clientes')) {
+        } else if (rolUsuarioAEliminar === 'cliente' && permisos.includes('eliminar_clientes')) {
             // El usuario tiene permiso para eliminar clientes
         } else {
             throw new Error('No tienes permisos para eliminar este tipo de usuario');
@@ -241,8 +247,12 @@ class Usuario {
     }
 
     async registrarAccionSuperAdmin(userId, accion) {
+        if (!ObjectId.isValid(userId)) {
+            throw new Error('ID de usuario no válido');
+        }
+        
         return await this.collection.updateOne(
-            { _id: userId, 'rol.nombre': 'super_admin' },
+            { _id: new ObjectId(userId), 'rol.nombre': 'super_admin' },
             {
                 $push: {
                     'detalles.registroAcciones': {
