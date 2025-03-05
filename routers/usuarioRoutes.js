@@ -1,32 +1,41 @@
 const express = require('express');
 const router = express.Router();
 const { autenticar, verificarPermisos } = require('../middlewares/middleware');
-const Usuario = require('../models/Usuario'); // Importa el modelo de usuario
+const Usuario = require('../models/Usuario'); 
 
 module.exports = (controller) => {
     // Ruta de registro con validación de usuarios existentes
     router.post('/registro', async (req, res, next) => {
         try {
+            // Verificar si hay usuarios en la base de datos
             const usuarios = await Usuario.countDocuments();
+            console.log('Número de usuarios:', usuarios); // Log para depuración
+    
             if (usuarios === 0) {
+                // Si no hay usuarios, permitir el registro sin autenticación ni permisos
                 return controller.registrar(req, res, next);
+            } else {
+                // Si ya hay usuarios, se requiere autenticación y permisos
+                autenticar(req, res, (err) => {
+                    if (err) {
+                        return next(err); // Manejar errores de autenticación
+                    }
+    
+                    verificarPermisos(['crear_usuarios'])(req, res, (err) => {
+                        if (err) {
+                            return next(err); // Manejar errores de permisos
+                        }
+    
+                        // Si todo está bien, proceder con el registro
+                        return controller.registrar(req, res, next);
+                    });
+                });
             }
         } catch (error) {
+            console.error('Error al verificar usuarios:', error); // Log para depuración
             return res.status(500).json({ error: 'Error al verificar usuarios' });
         }
-    
-        // Si ya hay usuarios, se requiere autenticación y permisos
-        autenticar(req, res, (err) => {
-            if (err) return next(err);
-    
-            verificarPermisos(['crear_usuarios'])(req, res, (err) => {
-                if (err) return next(err);
-    
-                controller.registrar(req, res, next);
-            });
-        });
     });
-    
     // Rutas de autenticación y usuarios
     router.post('/login', controller.login.bind(controller));
     router.get('/', autenticar, verificarPermisos(['ver_usuarios']), controller.obtenerTodos.bind(controller));
