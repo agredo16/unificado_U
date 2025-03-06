@@ -1,3 +1,4 @@
+
 const express = require('express');
 const { connectDB } = require('./config/bdClient');
 const usuarioRoutes = require('./routers/usuarioRoutes');
@@ -10,6 +11,7 @@ const { loggin, manejarErrores } = require('./middlewares/middleware');
 const cors = require('cors');
 
 require('dotenv').config();
+console.log('JWT_SECRET:', process.env.JWT_SECRET);
 
 const app = express();
 

@@ -107,7 +107,7 @@ class UsuarioController {
                     rol: usuario.rol.nombre || 'sin_rol',
                     permisos: usuario.rol?.permisos || []
                 },
-                process.env.JWT_SECRET || 'secreto',
+                process.env.JWT_SECRET,
                 { expiresIn: '1h' }
             );
 
