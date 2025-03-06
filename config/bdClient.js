@@ -4,7 +4,6 @@ require('dotenv').config();
 const uri = process.env.MONGODB_URI;
 const client = new MongoClient(uri, {
   // Optimizaciones para la conexión de MongoDB
-  useUnifiedTopology: true,
   maxPoolSize: 10, // Número máximo de conexiones en el pool
   minPoolSize: 5,   // Mantener al menos 5 conexiones abiertas
   maxIdleTimeMS: 30000 // Tiempo máximo que una conexión puede estar inactiva (30 segundos)

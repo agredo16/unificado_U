@@ -90,6 +90,11 @@ class UsuarioController {
     async login(req, res) {
         try {
             const { email, password } = req.body;
+            if(!process.env.JWT_SECRET){
+                throw new Error('JWT_SECRET no esta definido en las variables de entorno');
+            }
+            console.log('JWT_SECRET en login', process.env.JWT_SECRET);
+            
 
             const usuario = await this.usuarioModel.obtenerPorEmail(email);
             if (!usuario) {
