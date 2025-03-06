@@ -2,50 +2,69 @@ const express = require('express');
 const { connectDB } = require('./config/bdClient');
 const usuarioRoutes = require('./routers/usuarioRoutes');
 const Usuario = require('./models/Usuario');
-const{autenticar} = require('./middlewares/middleware');
+const { autenticar } = require('./middlewares/middleware');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const compression = require('compression');
-const timeout = require('connect-timeout');
-const {loggin, manejarErrores}= require('./middlewares/middleware');
+const { loggin, manejarErrores } = require('./middlewares/middleware');
 const cors = require('cors');
-const UsuarioController = require('./controllers/usuarioController');
 
 require('dotenv').config();
 
 const app = express();
 
+// Middlewares base
 app.use(express.json());
 app.use(helmet());
 app.use(compression());
-app.use(timeout('70s'));
 app.use(cors());
 
+// Middlewares con opciones optimizadas
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, 
-  max: 100 
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 app.use(limiter);
+
+// Middleware de logging
 app.use(loggin);
 
+// Variable para almacenar la instancia del modelo
+let usuarioModelInstance = null;
+
 async function iniciarServidor() {
-  const db = await connectDB();
+  try {
+    // Conectar a la base de datos (singleton)
+    const db = await connectDB();
 
-  const usuarioModel = new Usuario(db); // Define usuarioModel primero
-  await usuarioModel.inicializarRoles();
+    // Crear instancia del modelo y reutilizarla
+    usuarioModelInstance = new Usuario(db);
+    
+    // Inicializar roles (solo al inicio)
+    await usuarioModelInstance.inicializarRoles();
 
-  const autenticarMiddleware = autenticar(usuarioModel); // Ahora puedes crear el middleware
+    // Crear middleware de autenticación con la instancia del modelo
+    const autenticarMiddleware = autenticar(usuarioModelInstance);
 
-  const usuarioController = new UsuarioController(usuarioModel);
+    // Configurar rutas
+    app.use('/api/usuarios', usuarioRoutes(autenticarMiddleware, usuarioModelInstance));
 
-  app.use('/api/usuarios', usuarioRoutes(autenticarMiddleware, usuarioModel)); // Pasa autenticarMiddleware y usuarioModel
+    // Middleware de manejo de errores (siempre al final)
+    app.use(manejarErrores);
 
-  app.use(manejarErrores);
-
-  const PORT = process.env.PORT || 3000;
-  app.listen(PORT, () => {
-    console.log(`Servidor corriendo en puerto ${PORT}`);
-  });
+    // Configurar el puerto y comenzar a escuchar
+    const PORT = process.env.PORT || 3000;
+    
+    app.listen(PORT, () => {
+      console.log(`Servidor corriendo en puerto ${PORT}`);
+    });
+  } catch (error) {
+    console.error('Error al iniciar el servidor:', error);
+    process.exit(1);
+  }
 }
 
-iniciarServidor().catch(console.error);
+// Iniciar el servidor
+iniciarServidor();

@@ -4,10 +4,27 @@ class Usuario {
     constructor(db) {
         this.collection = db.collection('usuarios');
         this.rolesCollection = db.collection('roles');
+
+         // Caché para reducir consultas
+         this.rolesCache = null;
+         this.ultimaActualizacionRoles = 0;
+         this.INTERVALO_CACHE = 60000; // 1 minuto
     }
     async contarUsuarios() {
         return await this.collection.countDocuments();
     }
+    async obtenerRolesCache() {
+        const ahora = Date.now();
+        
+        // Verificar si necesitamos actualizar el caché
+        if (!this.rolesCache || (ahora - this.ultimaActualizacionRoles) > this.INTERVALO_CACHE) {
+            this.rolesCache = await this.rolesCollection.find({}).toArray();
+            this.ultimaActualizacionRoles = ahora;
+        }
+        
+        return this.rolesCache;
+    }
+
 
     async inicializarRoles() {
         const rolesExistentes = await this.rolesCollection.countDocuments();
@@ -54,11 +71,16 @@ class Usuario {
                 }
             ]);
             console.log('Roles inicializados correctamente');
+            await this.obtenerRolesCache();
+
         }
     }
 
     async crear(userData) {
-        const rol = await this.rolesCollection.findOne({ nombre: userData.tipo });
+        // Obtener rol del caché en lugar de hacer consulta
+        const roles = await this.obtenerRolesCache();
+        const rol = roles.find(r => r.nombre === userData.tipo);
+        
         if (!rol) {
             throw new Error('Tipo de usuario no válido');
         }

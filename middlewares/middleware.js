@@ -1,13 +1,22 @@
 const jwt = require('jsonwebtoken');
-const Usuario =require('../models/Usuario');
 
+let hayUsuariosRegistrados = null;
+let ultimaComprobacion = 0;
+const INTERVALO_COMPROBACION = 60000; // 1 minuto en milisegundos
 
 const autenticar = (usuarioModel) => async (req, res, next) => {
   try {
-    console.log('Middleware autenticar: Verificando si hay usuarios registrados...');
-    const totalUsuarios = await usuarioModel.contarUsuarios();
+    const ahora = Date.now();
+    
+    // Solo verificar si hay usuarios cada minuto o en la primera ejecución
+    if (hayUsuariosRegistrados === null || (ahora - ultimaComprobacion) > INTERVALO_COMPROBACION) {
+      console.log('Middleware autenticar: Verificando si hay usuarios registrados...');
+      const totalUsuarios = await usuarioModel.contarUsuarios();
+      hayUsuariosRegistrados = totalUsuarios > 0;
+      ultimaComprobacion = ahora;
+    }
 
-    if (totalUsuarios === 0) {
+    if (!hayUsuariosRegistrados) {
       console.log('Middleware autenticar: No hay usuarios registrados. Permitir registro sin autenticación.');
       return next();
     }
@@ -39,15 +48,11 @@ const autenticar = (usuarioModel) => async (req, res, next) => {
   }
 };
 
-module.exports = { autenticar };
-
-
-const verificarPermisos = (usuarioModel) => (permisosRequeridos = []) => {
+const verificarPermisos = (permisosRequeridos = []) => {
   return async (req, res, next) => {
     try {
-      const totalUsuarios = await usuarioModel.contarUsuarios();
-
-      if (totalUsuarios === 0) {
+      // No hacemos la consulta de contarUsuarios aquí, usamos el valor cacheado
+      if (!hayUsuariosRegistrados) {
         return next();
       }
 
