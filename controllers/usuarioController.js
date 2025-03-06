@@ -10,10 +10,8 @@ class UsuarioController {
         try {
             const { email, password, nombre, tipo, documento, telefono, direccion, ...datosEspecificos } = req.body;
     
-            // Verificar si ya existe algún usuario en la base de datos
             const totalUsuarios = await this.usuarioModel.contarUsuarios();
     
-            // Si no hay usuarios en la base de datos, permitir la creación sin verificar permisos
             if (totalUsuarios === 0) {
                 const hashedPassword = await bcrypt.hash(password, 10);
     
@@ -39,7 +37,6 @@ class UsuarioController {
                 });
             }
     
-            // Si ya hay usuarios en la base de datos, verificar permisos
             const usuarioActual = req.usuario;
     
             if (!usuarioActual) {
@@ -52,7 +49,6 @@ class UsuarioController {
                 return res.status(403).json({ error: 'No tiene permisos para crear usuarios' });
             }
     
-            // Verificar si el email ya está registrado
             const existente = await this.usuarioModel.obtenerPorEmail(email);
             if (existente) {
                 return res.status(400).json({ error: 'Email ya registrado' });
@@ -248,9 +244,8 @@ class UsuarioController {
             const { accion } = req.body;
             const userId = req.usuario.userId;
 
-            // Verificar el rol usando la estructura correcta
             const esAdmin = req.usuario.rol === 'super_admin' || 
-                          (req.usuario.rol && req.usuario.rol.nombre === 'super_admin');
+              (req.usuario.rol && req.usuario.rol.nombre === 'super_admin');
                           
             if (!esAdmin) {
                 return res.status(403).json({ error: 'Acción no permitida' });

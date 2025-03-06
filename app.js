@@ -34,15 +34,12 @@ async function iniciarServidor() {
   
   const usuarioModel = new Usuario(db);
   
-  // Inicializar roles predeterminados
   await usuarioModel.inicializarRoles();
   
   const usuarioController = new UsuarioController(usuarioModel);
   
-  // Rutas
   app.use('/api/usuarios', usuarioRoutes(usuarioController));
   
-  // Manejador de errores
   app.use(manejarErrores);
   
   const PORT = process.env.PORT || 3000;

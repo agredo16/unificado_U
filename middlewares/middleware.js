@@ -1,8 +1,17 @@
 const jwt = require('jsonwebtoken');
 
 // Middleware para autenticación
-const autenticar = (req, res, next) => {
+const autenticar = async (req, res, next) => {
   try {
+    // Verificar si ya existe algún usuario en la base de datos
+    const totalUsuarios = await usuarioModel.contarUsuarios();
+
+    // Si no hay usuarios en la base de datos, permitir la solicitud sin autenticación
+    if (totalUsuarios === 0) {
+      return next();
+    }
+
+    // Si hay usuarios, verificar el token
     const token = req.headers.authorization?.split(' ')[1];
 
     if (!token) {
@@ -30,10 +39,25 @@ const autenticar = (req, res, next) => {
 
 // Middleware para verificación de permisos - CORREGIDO
 const verificarPermisos = (permisosRequeridos = []) => {
-  return (req, res, next) => {
+  return async (req, res, next) => {
     try {
+      // Verificar si ya existe algún usuario en la base de datos
+      const totalUsuarios = await usuarioModel.contarUsuarios();
+
+      // Si no hay usuarios en la base de datos, permitir la solicitud sin verificar permisos
+      if (totalUsuarios === 0) {
+        return next();
+      }
+
+      // Si hay usuarios, verificar permisos
+      const usuarioActual = req.usuario;
+
+      if (!usuarioActual) {
+        return res.status(401).json({ error: 'No autorizado' });
+      }
+
       // Obtener permisos ya sea de req.usuario.permisos o de req.usuario.rol.permisos
-      const permisos = req.usuario.permisos || (req.usuario.rol && req.usuario.rol.permisos) || [];
+      const permisos = usuarioActual.permisos || (usuarioActual.rol && usuarioActual.rol.permisos) || [];
 
       console.log('Permisos del usuario:', permisos);
       console.log('Permisos requeridos:', permisosRequeridos);
@@ -42,7 +66,10 @@ const verificarPermisos = (permisosRequeridos = []) => {
         return res.status(403).json({ error: 'No tiene permisos asignados' });
       }
 
-      if (permisosRequeridos.length === 0 || permisos.some(p => permisosRequeridos.includes(p))) {
+      // Verificar si el usuario tiene al menos uno de los permisos requeridos
+      const tienePermisos = permisosRequeridos.some(permiso => permisos.includes(permiso));
+
+      if (permisosRequeridos.length === 0 || tienePermisos) {
         return next();
       }
 
