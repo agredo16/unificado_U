@@ -7,7 +7,7 @@ class Usuario {
     }
 
     async inicializarRoles() {
-        const rolesExistentes = await this.rolesCollection.countDocuments();
+        const rolesExistentes = await this.rolesCollection.count();
         if (rolesExistentes === 0) {
             await this.rolesCollection.insertMany([
                 {
@@ -139,15 +139,12 @@ class Usuario {
 
         const objectId = new ObjectId(id);
 
-        // CORREGIDO: Obtener permisos de manera flexible
         const permisos = usuarioActual.permisos || (usuarioActual.rol && usuarioActual.rol.permisos) || [];
 
-        // Verifica si el usuario que realiza la acción tiene el permiso 'editar_usuarios'
         if (!permisos.includes('editar_usuarios')) {
             throw new Error('No tiene permisos para editar usuarios');
         }
 
-        // Verifica si el usuario existe antes de intentar actualizarlo
         const usuarioExistente = await this.obtenerPorId(id);
         if (!usuarioExistente) {
             throw new Error('Usuario no encontrado');
@@ -186,7 +183,6 @@ class Usuario {
             delete datosActualizados.datosEspecificos;
         }
 
-        // Actualizamos el usuario en la base de datos
         const resultado = await this.collection.updateOne(
             { _id: objectId },
             { $set: datosActualizados }
@@ -213,15 +209,11 @@ class Usuario {
 
         const rolUsuarioAEliminar = usuarioExistente.rol.nombre;
         
-        // CORREGIDO: Obtener permisos de manera flexible
         const permisos = usuarioActual.permisos || (usuarioActual.rol && usuarioActual.rol.permisos) || [];
 
         if (permisos.includes('eliminar_usuarios')) {
-            // El usuario tiene permiso para eliminar cualquier usuario
         } else if (rolUsuarioAEliminar === 'laboratorista' && permisos.includes('eliminar_laboratoristas')) {
-            // El usuario tiene permiso para eliminar laboratoristas
         } else if (rolUsuarioAEliminar === 'cliente' && permisos.includes('eliminar_clientes')) {
-            // El usuario tiene permiso para eliminar clientes
         } else {
             throw new Error('No tienes permisos para eliminar este tipo de usuario');
         }

@@ -1,4 +1,3 @@
-// app.js
 const express = require('express');
 const { connectDB } = require('./config/bdClient');
 const usuarioRoutes = require('./routers/usuarioRoutes');
@@ -15,7 +14,6 @@ require('dotenv').config();
 
 const app = express();
 
-// Middlewares
 app.use(express.json());
 app.use(helmet());
 app.use(compression());
