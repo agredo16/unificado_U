@@ -4,7 +4,15 @@ const { autenticar, verificarPermisos } = require('../middlewares/middleware');
 const Usuario = require('../models/Usuario'); 
 
 module.exports = (controller) => {
-    router.post('/registro', autenticar, verificarPermisos(['crear_usuarios']), controller.registrar.bind(controller));
+    router.post('/registro', autenticar, (req, res,next)=>{
+        const totalUsuarios = UsuarioModel.cotarUsuarios();
+        if(totalUsuarios === 0){
+            return controller.registrar(req, res);
+        }else {
+            return verificarPermisos(['crear_usuarios'])(req, res, next);
+        }
+    },controller.registrar.bind(controller));
+    
     router.post('/login', controller.login.bind(controller));
     router.get('/', autenticar, verificarPermisos(['ver_usuarios']), controller.obtenerTodos.bind(controller));
     router.get('/:id', autenticar, verificarPermisos(['ver_usuarios']), controller.obtenerPorId.bind(controller));

@@ -14,6 +14,10 @@ class UsuarioController {
             const totalUsuarios = await this.usuarioModel.contarUsuarios();
     
             if (totalUsuarios === 0) {
+                if(tipo !== 'super_admin'){
+                    return res.status(400).json({error: 'El primer usuario debe ser un super administrador'});
+                }
+
                 const hashedPassword = await bcrypt.hash(password, 10);
     
                 const usuarioResult = await this.usuarioModel.crear({
@@ -26,9 +30,10 @@ class UsuarioController {
                     direccion,
                     datosEspecificos
                 });
-    
+                console.log(`Primer usuario registrado: ${email}, tipo: ${tipo}`);
+                
                 return res.status(201).json({
-                    mensaje: 'Primer usuario creado exitosamente',
+                    mensaje: 'Primer usuario (super administrador ) creado exitosamente',
                     usuario: {
                         _id: usuarioResult.insertedId,
                         email,
