@@ -6,11 +6,11 @@ class Usuario {
         this.rolesCollection = db.collection('roles');
     }
     async contarUsuarios() {
-        return await this.collection.count();
+        return await this.collection.countDocuments();
     }
 
     async inicializarRoles() {
-        const rolesExistentes = await this.rolesCollection.count();
+        const rolesExistentes = await this.rolesCollection.countDocuments();
         if (rolesExistentes === 0) {
             await this.rolesCollection.insertMany([
                 {

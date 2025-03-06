@@ -1,20 +1,22 @@
 const jwt = require('jsonwebtoken');
+const Usuario =require('../models/Usuario');
 
-const autenticar = async (req, res, next) => {
+
+const autenticar = (usuarioModel) => async (req, res, next) => {
   try {
-    console.log('Midldeware autenticar:  Verificando si ha usuarios registrados...');
+    console.log('Middleware autenticar: Verificando si hay usuarios registrados...');
     const totalUsuarios = await usuarioModel.contarUsuarios();
 
     if (totalUsuarios === 0) {
-      console.log('Middleware autenticar : No hay usuarios registrados. Permitir registro sin autenticacion');
+      console.log('Middleware autenticar: No hay usuarios registrados. Permitir registro sin autenticación.');
       return next();
     }
 
-    console.log('Middleware autenticar: Hay usuarios registrados. verificando token...');    
+    console.log('Middleware autenticar: Hay usuarios registrados. Verificando token...');
     const token = req.headers.authorization?.split(' ')[1];
 
     if (!token) {
-      console.log('Middleware autenticar: Token no proporcionado');
+      console.log('Middleware autenticar: Token no proporcionado.');
       return res.status(401).json({ error: 'Token no proporcionado' });
     }
 
@@ -26,8 +28,7 @@ const autenticar = async (req, res, next) => {
     req.usuario = decodificado;
     next();
   } catch (error) {
-    console.log('Middleware autenticar: Error:', error.message);
-    
+    console.error('Middleware autenticar: Error:', error.message);
     if (error.name === 'TokenExpiredError') {
       return res.status(401).json({ error: 'El token ha expirado' });
     }
@@ -38,8 +39,10 @@ const autenticar = async (req, res, next) => {
   }
 };
 
+module.exports = { autenticar };
 
-const verificarPermisos = (permisosRequeridos = []) => {
+
+const verificarPermisos = (usuarioModel) => (permisosRequeridos = []) => {
   return async (req, res, next) => {
     try {
       const totalUsuarios = await usuarioModel.contarUsuarios();

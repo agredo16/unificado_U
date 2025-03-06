@@ -2,13 +2,14 @@ const express = require('express');
 const { connectDB } = require('./config/bdClient');
 const usuarioRoutes = require('./routers/usuarioRoutes');
 const Usuario = require('./models/Usuario');
-const UsuarioController = require('./controllers/usuarioController');
+const{autenticar} = require('./middlewares/middleware');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const compression = require('compression');
 const timeout = require('connect-timeout');
-const {loggin, manejarErrores }= require('./middlewares/middleware');
+const {loggin, manejarErrores}= require('./middlewares/middleware');
 const cors = require('cors');
+const UsuarioController = require('./controllers/usuarioController');
 
 require('dotenv').config();
 
@@ -29,17 +30,18 @@ app.use(loggin);
 
 async function iniciarServidor() {
   const db = await connectDB();
-  
-  const usuarioModel = new Usuario(db);
-  
+
+  const usuarioModel = new Usuario(db); // Define usuarioModel primero
   await usuarioModel.inicializarRoles();
-  
+
+  const autenticarMiddleware = autenticar(usuarioModel); // Ahora puedes crear el middleware
+
   const usuarioController = new UsuarioController(usuarioModel);
-  
-  app.use('/api/usuarios', usuarioRoutes(usuarioController));
-  
+
+  app.use('/api/usuarios', usuarioRoutes(autenticarMiddleware, usuarioModel)); // Pasa autenticarMiddleware y usuarioModel
+
   app.use(manejarErrores);
-  
+
   const PORT = process.env.PORT || 3000;
   app.listen(PORT, () => {
     console.log(`Servidor corriendo en puerto ${PORT}`);
