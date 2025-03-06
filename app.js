@@ -18,7 +18,7 @@ const app = express();
 app.use(express.json());
 app.use(helmet());
 app.use(compression());
-app.use(timeout('10s'));
+app.use(timeout('30s'));
 app.use(cors());
 
 const limiter = rateLimit({
