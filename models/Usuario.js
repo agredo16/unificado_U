@@ -5,6 +5,9 @@ class Usuario {
         this.collection = db.collection('usuarios');
         this.rolesCollection = db.collection('roles');
     }
+    async contarUsuarios() {
+        return await this.collection.count();
+    }
 
     async inicializarRoles() {
         const rolesExistentes = await this.rolesCollection.count();
@@ -116,9 +119,6 @@ class Usuario {
 
     async obtenerTodos() {
         return await this.collection.find({}, { projection: { password: 0 } }).toArray();
-    }
-    async contarUsuarios() {
-        return await this.collection.countDocuments();
     }
 
     async obtenerPorId(id) {
