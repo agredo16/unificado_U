@@ -117,6 +117,9 @@ class Usuario {
     async obtenerTodos() {
         return await this.collection.find({}, { projection: { password: 0 } }).toArray();
     }
+    async contarUsuarios() {
+        return await this.collection.countDocuments();
+    }
 
     async obtenerPorId(id) {
         if (!ObjectId.isValid(id)) {

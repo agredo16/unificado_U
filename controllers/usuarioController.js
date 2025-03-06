@@ -8,25 +8,58 @@ class UsuarioController {
 
     async registrar(req, res) {
         try {
-            const usuarioActual = req.usuario; // Suponiendo que el usuario actual está en el request
-
-            // Obtener permisos de manera flexible
+            const { email, password, nombre, tipo, documento, telefono, direccion, ...datosEspecificos } = req.body;
+    
+            // Verificar si ya existe algún usuario en la base de datos
+            const totalUsuarios = await this.usuarioModel.contarUsuarios();
+    
+            // Si no hay usuarios en la base de datos, permitir la creación sin verificar permisos
+            if (totalUsuarios === 0) {
+                const hashedPassword = await bcrypt.hash(password, 10);
+    
+                const usuarioResult = await this.usuarioModel.crear({
+                    email,
+                    password: hashedPassword,
+                    nombre,
+                    tipo,
+                    documento,
+                    telefono,
+                    direccion,
+                    datosEspecificos
+                });
+    
+                return res.status(201).json({
+                    mensaje: 'Primer usuario creado exitosamente',
+                    usuario: {
+                        _id: usuarioResult.insertedId,
+                        email,
+                        nombre,
+                        tipo
+                    }
+                });
+            }
+    
+            // Si ya hay usuarios en la base de datos, verificar permisos
+            const usuarioActual = req.usuario;
+    
+            if (!usuarioActual) {
+                return res.status(401).json({ error: 'No autorizado' });
+            }
+    
             const permisos = usuarioActual.permisos || (usuarioActual.rol && usuarioActual.rol.permisos) || [];
-
-            // Verifica si el usuario que realiza la acción tiene el permiso 'crear_usuarios'
+    
             if (!permisos.includes('crear_usuarios')) {
                 return res.status(403).json({ error: 'No tiene permisos para crear usuarios' });
             }
-
-            const { email, password, nombre, tipo, documento, telefono, direccion, ...datosEspecificos } = req.body;
-
+    
+            // Verificar si el email ya está registrado
             const existente = await this.usuarioModel.obtenerPorEmail(email);
             if (existente) {
                 return res.status(400).json({ error: 'Email ya registrado' });
             }
-
+    
             const hashedPassword = await bcrypt.hash(password, 10);
-
+    
             const usuarioResult = await this.usuarioModel.crear({
                 email,
                 password: hashedPassword,
@@ -37,7 +70,7 @@ class UsuarioController {
                 direccion,
                 datosEspecificos
             });
-
+    
             res.status(201).json({
                 mensaje: 'Usuario creado exitosamente',
                 usuario: {
@@ -66,7 +99,6 @@ class UsuarioController {
                 return res.status(400).json({ error: 'Credenciales inválidas' });
             }
 
-            // CORREGIDO: Estructura del token unificada
             const token = jwt.sign(
                 {
                     userId: usuario._id,
@@ -111,7 +143,6 @@ class UsuarioController {
                 return res.status(404).json({ error: 'Usuario no encontrado' });
             }
 
-            // Eliminamos la contraseña antes de enviar al cliente
             const { password, ...usuarioSinPassword } = usuario;
 
             res.status(200).json(usuarioSinPassword);
@@ -122,14 +153,13 @@ class UsuarioController {
 
     async actualizar(req, res) {
         try {
-            const usuarioActual = req.usuario; // Suponiendo que el usuario actual está en el request
+            const usuarioActual = req.usuario; 
             const { password, tipo, ...datosActualizados } = req.body;
 
             if (password) {
                 datosActualizados.password = await bcrypt.hash(password, 10);
             }
 
-            // Si se está cambiando el tipo de usuario
             if (tipo) {
                 datosActualizados.tipo = tipo;
             }
@@ -137,7 +167,7 @@ class UsuarioController {
             const resultado = await this.usuarioModel.actualizarUsuario(
                 req.params.id,
                 datosActualizados,
-                usuarioActual // Pasar el usuario actual para verificar permisos
+                usuarioActual 
             );
 
             if (resultado.matchedCount === 0) {
@@ -152,7 +182,7 @@ class UsuarioController {
 
     async eliminar(req, res) {
         try {
-            const usuarioActual = req.usuario; // Suponiendo que el usuario actual está en el request
+            const usuarioActual = req.usuario; 
             const resultado = await this.usuarioModel.eliminar(req.params.id, usuarioActual);
 
             if (resultado.deletedCount === 0) {
