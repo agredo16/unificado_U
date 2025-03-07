@@ -137,6 +137,7 @@ class UsuarioController {
     }
 
     async obtenerTodos(req, res) {
+        console.log('JWT_SECRET:', process.env.JWT_SECRET);
         try {
             const usuarios = await this.usuarioModel.obtenerTodos();
             res.status(200).json(usuarios);

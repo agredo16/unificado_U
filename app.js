@@ -21,7 +21,6 @@ app.use(helmet());
 app.use(compression());
 app.use(cors());
 
-// Middlewares con opciones optimizadas
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, 
   max: 100,
@@ -30,7 +29,6 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// Middleware de logging
 app.use(loggin);
 
 // Variable para almacenar la instancia del modelo
@@ -44,19 +42,16 @@ async function iniciarServidor() {
     // Crear instancia del modelo y reutilizarla
     usuarioModelInstance = new Usuario(db);
     
-    // Inicializar roles (solo al inicio)
     await usuarioModelInstance.inicializarRoles();
 
-    // Crear middleware de autenticación con la instancia del modelo
     const autenticarMiddleware = autenticar(usuarioModelInstance);
 
     // Configurar rutas
     app.use('/api/usuarios', usuarioRoutes(autenticarMiddleware, usuarioModelInstance));
 
-    // Middleware de manejo de errores (siempre al final)
+    // Middleware de manejo de errores 
     app.use(manejarErrores);
 
-    // Configurar el puerto y comenzar a escuchar
     const PORT = process.env.PORT || 3000;
     
     app.listen(PORT, () => {

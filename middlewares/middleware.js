@@ -32,7 +32,7 @@ const autenticar = (usuarioModel) => async (req, res, next) => {
     }
 
     if (!process.env.JWT_SECRET) {
-      throw new Error('JWT_SECRET no está definido en las variables de entorno');
+      throw new Error('JWT_SECRET no está definido en las variables de entorno'+ process.env.JWT_SECRET);
     }
 
     const decodificado = jwt.verify(token, process.env.JWT_SECRET);
@@ -53,7 +53,6 @@ const autenticar = (usuarioModel) => async (req, res, next) => {
 const verificarPermisos = (permisosRequeridos = []) => {
   return async (req, res, next) => {
     try {
-      // No hacemos la consulta de contarUsuarios aquí, usamos el valor cacheado
       if (!hayUsuariosRegistrados) {
         return next();
       }
