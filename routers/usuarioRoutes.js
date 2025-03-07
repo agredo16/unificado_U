@@ -1,7 +1,7 @@
+require('dotenv').config();
 const express = require('express');
 const router = express.Router();
 const { verificarPermisos } = require('../middlewares/middleware');
-
 
 module.exports = (autenticarMiddleware, usuarioModel) => {
   const UsuarioController = require('../controllers/usuarioController');

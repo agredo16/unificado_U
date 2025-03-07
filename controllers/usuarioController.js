@@ -1,7 +1,8 @@
+require('dotenv').config();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const Usuario = require('../models/Usuario');
-require('dotenv').config();
+
 
 class UsuarioController {
     constructor(usuarioModel) {
