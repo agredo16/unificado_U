@@ -30,13 +30,14 @@ const limiter = rateLimit({
 app.use(limiter);
 
 app.use(loggin);
+app.get('/status', (req, res) => { res.status(200).json({ mensaje: 'Despliegue exitoso' });
+});
 
-// Variable para almacenar la instancia del modelo
+
 let usuarioModelInstance = null;
 
 async function iniciarServidor() {
   try {
-    // Conectar a la base de datos (singleton)
     const db = await connectDB();
 
     // Crear instancia del modelo y reutilizarla
@@ -49,7 +50,6 @@ async function iniciarServidor() {
     // Configurar rutas
     app.use('/api/usuarios', usuarioRoutes(autenticarMiddleware, usuarioModelInstance));
 
-    // Middleware de manejo de errores 
     app.use(manejarErrores);
 
     const PORT = process.env.PORT || 3000;
@@ -63,5 +63,4 @@ async function iniciarServidor() {
   }
 }
 
-// Iniciar el servidor
 iniciarServidor();
