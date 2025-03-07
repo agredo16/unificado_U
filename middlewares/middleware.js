@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+require('dotenv').config();
 
 let hayUsuariosRegistrados = null;
 let ultimaComprobacion = 0;
